@@ -3,9 +3,10 @@
 
 # Display script usage/helpful information
 function display_usage() {
-    echo "Usage: $0 -l <length> [-n] [-s]"
+    echo "Usage: $0 -l <length> -f <filename> [-n] [-s]"
     echo "Options:"
     echo "  -l <length>: Length of the password (between 8 and 20)"
+    echo "  -f <filename>: Name of the file the password will be stored in"
     echo "  -n: Include numbers in the password"
     echo "  -s: Include symbols in the password"
     echo "  -h: Display this help page"
@@ -19,6 +20,7 @@ fi
 
 # Initialize variables
 length=0
+filename=""
 include_numbers=false
 include_symbols=false
 letters="a-zA-Z"
@@ -26,7 +28,7 @@ numbers="0-9"
 symbols="!@#$%^&*()-_=+[]{}|;:,.<>?/\`~"
 
 # Process CL options
-while getopts ":l:n s h" opt; do
+while getopts ":l:f: n s h" opt; do
     case $opt in
         l) # Length of password
             length=$OPTARG
@@ -34,6 +36,10 @@ while getopts ":l:n s h" opt; do
                 echo "Password length must be between 8 and 20"
                 exit 1
             fi
+        ;;
+        f) #File name
+            filename=$OPTARG
+            echo $filename
         ;;
         n) # Include numbers
             include_numbers=true
@@ -53,7 +59,7 @@ while getopts ":l:n s h" opt; do
     esac
 done
 
-# Check if there are any arguments after if both -n and -s are used because for some reason it doesn't check after but checks in between?
+# Check if there are any arguments after both -n and -s
 shift $((OPTIND - 1))
 if [[ $# -gt 0 ]]; then
     echo "Error: Unexpected argument detected. -n and -s should not be followed by any argument. Please see the usage documentation below."
@@ -68,23 +74,28 @@ if [[ $length -eq 0 ]]; then
     exit 1
 fi
 
+# If file name was not set, display help page
+if [[ -z $filename || $filename == "-n" || $filename == "-s" ]]; then
+    echo "Error: The name of the file the password will be stored in must be specified. Please see the usage documentation below."
+    display_usage
+    exit 1
+fi
+
 # Characters to be used for password generation
 characters=$letters
 
 if $include_numbers; then
-    characters=$characters$numbers
+    characters+=$numbers
 fi
 if $include_symbols; then
-    characters=$characters$symbols
+    characters+=$symbols
 fi
 
-echo "$include_numbers"
-echo "$include_symbols"
 echo "$characters"
 
 # Generate the password
-password=$(head /dev/urandom | tr -dc "$characters" | head -c "$length")
+password=$(head /dev/urandom | base64 | tr -dc "$characters" | head -c "$length")
 
 # Store the password
 echo "$password"
-echo "$password" > ./super_secret.txt
+echo "$password" > ./$filename.txt
