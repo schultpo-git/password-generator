@@ -85,28 +85,24 @@ while true; do
 
     # Validation check if -n is used
     if $include_numbers && [[ ! "$password" =~ [0-9] ]]; then
-        echo "$password"
         echo "Password does not contain a number. Regenerating..."
         continue
     fi
     
     # Validation check if -n is not used
     if ! $include_numbers && [[ "$password" =~ [0-9] ]]; then
-        echo "$password"
         echo "Password should not contain numbers. Regenerating..."
         continue
     fi
 
     # Validation check if -s is used
     if $include_symbols && ! [[ "$password" =~ [!@#$%^\&\*\(\)-_=\[\]\{\}|\;:,.\<\>?/\`~] ]]; then
-        echo "$password"
         echo "Password does not contain a symbol. Regenerating..."
         continue
     fi
 
     # Validation check if -s is not used
     if ! $include_symbols && [[ "$password" =~ [!@#$%^\&\*\(\)-_=\[\]\{\}|\;:,.\<\>?/\`~] ]]; then
-        echo "$password"
         echo "Password does not contain a symbol. Regenerating..."
         continue
     fi
