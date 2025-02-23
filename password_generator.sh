@@ -80,7 +80,39 @@ if $include_symbols; then
 fi
 
 # Generate the password
-password=$(head /dev/urandom | base64 | tr -dc "$characters" | head -c "$length")
+while true; do
+    password=$(head /dev/urandom | base64 | tr -dc "$characters" | head -c "$length")
+
+    # Validation check if -n is used
+    if $include_numbers && [[ ! "$password" =~ [0-9] ]]; then
+        echo "$password"
+        echo "Password does not contain a number. Regenerating..."
+        continue
+    fi
+    
+    # Validation check if -n is not used
+    if ! $include_numbers && [[ "$password" =~ [0-9] ]]; then
+        echo "$password"
+        echo "Password should not contain numbers. Regenerating..."
+        continue
+    fi
+
+    # Validation check if -s is used
+    if $include_symbols && ! [[ "$password" =~ [!@#$%^\&\*\(\)-_=\[\]\{\}|\;:,.\<\>?/\`~] ]]; then
+        echo "$password"
+        echo "Password does not contain a symbol. Regenerating..."
+        continue
+    fi
+
+    # Validation check if -s is not used
+    if ! $include_symbols && [[ "$password" =~ [!@#$%^\&\*\(\)-_=\[\]\{\}|\;:,.\<\>?/\`~] ]]; then
+        echo "$password"
+        echo "Password does not contain a symbol. Regenerating..."
+        continue
+    fi
+
+    break
+done
 
 # Store the password
 echo "$password" > ./super_secret.txt
