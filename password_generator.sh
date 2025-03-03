@@ -24,14 +24,14 @@ include_numbers=false
 include_symbols=false
 letters="a-zA-Z"
 numbers="0-9"
-symbols="!@#$%^&*()-_=[]{}|;:,.<>?/\`~"
+symbols="!@#$%&*()"
 
 # Process CL options
 while getopts ":l: n s h" opt; do
     case $opt in
         l) # Length of password
             length=$OPTARG
-            if [[ $length -lt 8 || $length -gt 20 ]]; then
+            if [[ $length -lt 8 || $length -gt 40 ]]; then
                 echo "Password length must be between 8 and 20"
                 exit 1
             fi
@@ -79,9 +79,11 @@ if $include_symbols; then
     characters+=$symbols
 fi
 
+echo "$characters"
+
 # Generate the password
 while true; do
-    password=$(head /dev/urandom | base64 | tr -dc "$characters" | head -c "$length")
+    password=$(head /dev/urandom | tr -dc "$characters" | head -c "$length")
 
     # Validation check if -n is used
     if $include_numbers && [[ ! "$password" =~ [0-9] ]]; then
@@ -96,14 +98,14 @@ while true; do
     fi
 
     # Validation check if -s is used
-    if $include_symbols && ! [[ "$password" =~ [!@#$%^\&\*\(\)-_=\[\]\{\}|\;:,.\<\>?/\`~] ]]; then
+    if $include_symbols && ! [[ "$password" =~ [!@#$%\&\*\(\)] ]]; then
         echo "Password does not contain a symbol. Regenerating..."
         continue
     fi
 
     # Validation check if -s is not used
-    if ! $include_symbols && [[ "$password" =~ [!@#$%^\&\*\(\)-_=\[\]\{\}|\;:,.\<\>?/\`~] ]]; then
-        echo "Password does not contain a symbol. Regenerating..."
+    if ! $include_symbols && [[ "$password" =~ [!@#$%\&\*\(\)] ]]; then
+        echo "Password should not contain symbols. Regenerating..."
         continue
     fi
 
@@ -112,4 +114,5 @@ done
 
 # Store the password
 echo "$password" > ./super_secret.txt
+echo "$password"
 echo "Your new password has been stored in super_secret.txt"
